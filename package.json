@@ -1,0 +1,21 @@
+{
+  "name": "untis-vorratsdaten",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "run": "tsc && node out/index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Jeidnx",
+  "license": "ISC",
+  "dependencies": {
+    "redis-om": "^0.3.5",
+    "webuntis": "^1.20.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "typescript": "^4.7.4"
+  }
+}
