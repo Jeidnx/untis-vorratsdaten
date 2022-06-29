@@ -1,5 +1,5 @@
 import WebUntis from './WebUntisLib.js';
-import {Klasse, SchoolYear} from 'webuntis'
+import {Klasse, Room, SchoolYear, Subject, Teacher} from 'webuntis'
 import {performance} from "perf_hooks";
 
 if (
@@ -20,6 +20,7 @@ const untis = new WebUntis(
 type CBtype = singleCb | ArrayCb;
 
 interface SchoolLesson {
+    id: number,
     startTime: Date,
     endTime: Date,
     code: "regular" | "cancelled" | "irregular",
@@ -27,9 +28,13 @@ interface SchoolLesson {
     courseName: string,
     courseShortName: string,
     shortSubject: string,
+    subjectId: number | null,
     subject: string,
+    teacherId: number | null,
     shortTeacher: string,
     teacher: string,
+    yearId: number | null,
+    roomId: number | null,
     room: string,
     shortRoom: string,
     lstext: string,
@@ -41,23 +46,53 @@ interface SchoolLesson {
 }
 
 type singleCb = (lesson: SchoolLesson, course: Klasse, year: SchoolYear) => Promise<void>
-type ArrayCb = [(lesson: SchoolLesson) => Promise<void>, (course: Klasse) => Promise<void>, (year: SchoolYear) => Promise<void>]
+type ArrayCb = [
+    (lesson: SchoolLesson) => Promise<void>,
+    (course: Klasse & {yearId: number}) => Promise<void>,
+    (year: SchoolYear) => Promise<void>,
+    (room: Room) => Promise<void>,
+    (teacher: Teacher) => Promise<void>,
+    (subject: Subject) => Promise<void>,
+]
 
 const getData = (cb: CBtype) => {
     const isArrayCb = Array.isArray(cb);
     untis.login().then(async () => {
-        untis.getAllSchoolYears().then((years) => {
+        untis.getAllSchoolYears().then(async(years) => {
+            if(isArrayCb){
+                await Promise.all(years.map((year) => {
+                    return cb[2](year);
+                }))
+                await untis.getRooms().then((rooms) => {
+                    return Promise.all(rooms.map((room) => {
+                        return cb[3](room);
+                    }))
+                });
+                await untis.getTeachers().then((teachers) => {
+                    return Promise.all(teachers.map((teacher) => {
+                        return cb[4](teacher);
+                    }))
+                }).catch((err) => {
+                    // Some users don't have the right to access teachers directly via api
+                    if(err.message !== 'Server didn\'t return any result.') throw new Error(err);
+                });
+                await untis.getSubjects().then((subjects) => {
+                    return Promise.all(subjects.map((subject) => {
+                        return cb[5](subject);
+                    }))
+                });
+            }
             const start = performance.now();
             Promise.all(years.map(async (year) => {
-                if(isArrayCb) await cb[2](year);
                 const startDate = year.startDate;
                 const endDate = year.endDate;
                 const courses = await untis.getClasses(year.id);
                 return Promise.all(courses.map(async (course) => {
-                    if(isArrayCb) await cb[1](course);
+                    if(isArrayCb) await cb[1]({yearId: year.id, ...course});
                     return untis.getTimetableForRange(startDate, endDate, course.id, 1).then((lessons) => {
                         return Promise.all(lessons.map((lesson) => {
                             const nLesson = {
+                                id: lesson.id,
                                 startTime: convertUntisTimeDateToDate(lesson.date, lesson.startTime),
                                 endTime: convertUntisTimeDateToDate(lesson.date, lesson.endTime),
                                 //TODO: figur out why typecasting is necessary here
@@ -69,10 +104,13 @@ const getData = (cb: CBtype) => {
                                 yearName: year.name,
                                 shortSubject: lesson['su'][0] ? lesson['su'][0]['name'] : '🤷',
                                 subject: lesson['su'][0] ? lesson['su'][0]['longname'] : 'no subject',
+                                subjectId: lesson.su[0] ? lesson.su[0].id : null,
+                                teacherId: lesson.te[0] ? lesson.te[0].id : null,
                                 teacher: lesson['te'][0] ? lesson['te'][0]['longname'] : 'no teacher',
                                 shortTeacher: lesson.te[0] ? lesson.te[0].name : '🤷‍',
                                 room: lesson.ro[0] ? lesson.ro[0].longname : 'no room',
                                 shortRoom: lesson.ro[0] ? lesson.ro[0].name : '🤷',
+                                roomId: lesson.ro[0] ? lesson.ro[0].id : null,
                                 lstext: lesson['lstext'] || '',
                                 info: lesson['info'] || '',
                                 subsText: lesson['substText'] || '',
