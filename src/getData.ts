@@ -20,6 +20,7 @@ const untis = new WebUntis(
 type CBtype = singleCb | ArrayCb;
 
 interface SchoolLesson {
+    id: number,
     startTime: Date,
     endTime: Date,
     code: "regular" | "cancelled" | "irregular",
@@ -58,6 +59,7 @@ const getData = (cb: CBtype) => {
                     return untis.getTimetableForRange(startDate, endDate, course.id, 1).then((lessons) => {
                         return Promise.all(lessons.map((lesson) => {
                             const nLesson = {
+                                id: lesson.id,
                                 startTime: convertUntisTimeDateToDate(lesson.date, lesson.startTime),
                                 endTime: convertUntisTimeDateToDate(lesson.date, lesson.endTime),
                                 //TODO: figur out why typecasting is necessary here
