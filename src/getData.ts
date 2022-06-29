@@ -19,7 +19,8 @@ const untis = new WebUntis(
 
 type CBtype = singleCb | ArrayCb;
 
-interface SchoolLesson {
+export interface SchoolLesson {
+    id: number,
     startTime: Date,
     endTime: Date,
     code: "regular" | "cancelled" | "irregular",
@@ -43,12 +44,12 @@ interface SchoolLesson {
 type singleCb = (lesson: SchoolLesson, course: Klasse, year: SchoolYear) => Promise<void>
 type ArrayCb = [(lesson: SchoolLesson) => Promise<void>, (course: Klasse) => Promise<void>, (year: SchoolYear) => Promise<void>]
 
-const getData = (cb: CBtype) => {
+const getData = async (cb: CBtype) => {
     const isArrayCb = Array.isArray(cb);
-    untis.login().then(async () => {
-        untis.getAllSchoolYears().then((years) => {
+    return untis.login().then(async () => {
+        return untis.getAllSchoolYears().then((years) => {
             const start = performance.now();
-            Promise.all(years.map(async (year) => {
+            return Promise.all(years.map(async (year) => {
                 if(isArrayCb) await cb[2](year);
                 const startDate = year.startDate;
                 const endDate = year.endDate;
@@ -58,6 +59,7 @@ const getData = (cb: CBtype) => {
                     return untis.getTimetableForRange(startDate, endDate, course.id, 1).then((lessons) => {
                         return Promise.all(lessons.map((lesson) => {
                             const nLesson = {
+                                id: lesson.id,
                                 startTime: convertUntisTimeDateToDate(lesson.date, lesson.startTime),
                                 endTime: convertUntisTimeDateToDate(lesson.date, lesson.endTime),
                                 //TODO: figur out why typecasting is necessary here
@@ -90,7 +92,6 @@ const getData = (cb: CBtype) => {
                 })
             })).then(() => {
                 console.log('Finished Everything in:', (performance.now()-start)/1000, 'seconds');
-                process.exit();
             })
         })
     });
