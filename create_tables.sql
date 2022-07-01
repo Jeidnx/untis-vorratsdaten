@@ -1,3 +1,7 @@
+create database untis;
+
+use untis;
+
 create table Room
 (
     id  int not null    primary key,

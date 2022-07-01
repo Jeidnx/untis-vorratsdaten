@@ -34,7 +34,7 @@ getData(([
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 lesson.id, lesson.startTime, lesson.endTime, lesson.code,
-                lesson.roomId, lesson.courseNr, lesson.subjectId, lesson.yearId, lesson.teacherId
+                lesson.roomId, lesson.courseId, lesson.subjectId, lesson.yearId, lesson.teacherId
             ]).then()
     },
     (course) => {
