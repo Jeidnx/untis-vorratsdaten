@@ -12,7 +12,7 @@
   "author": "Jeidnx",
   "license": "GPLV3",
   "dependencies": {
-    "webuntis": "^1.20.1"
+    "webuntis": "^1.21.0"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

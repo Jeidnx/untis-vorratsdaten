@@ -15,7 +15,16 @@ getData(([
     },
     (year) => {
         return Promise.resolve();
-    }
+    },
+    (room) => {
+        return Promise.resolve();
+    },
+    (teacher) => {
+        return Promise.resolve();
+    },
+    (subject) => {
+        return Promise.resolve();
+    },
 ]))
 // OR:
 
