@@ -1,8 +1,8 @@
-import getData, {SchoolLesson} from "./getData.js";
+import getData from "./getData.js";
 import * as fs from "fs";
 
 const obj: {
-    [key: string]: SchoolLesson
+    [key: string]: unknown
 } = {};
 
 getData((lesson, course, year) => {
